@@ -3,33 +3,52 @@
  MIT License.
 */
 
-var join  = require('path').join,
+var join = require('path').join,
     spawn = require('child_process').spawn;
 
 var Dialog = module.exports = {
 
-  info: function(str, title, callback) {
-    this.show('info', str, title, callback);
+  info: function(str, title, buttons, callback){
+    // Backwards-compatibility
+    if (typeof buttons === 'function') {
+      callback = buttons;
+      buttons = ['OK'];
+    }
+
+    this.show('info', str, title, buttons, callback);
   },
 
-  warn: function(str, title, callback) {
-    this.show('warning', str, title, callback);
+  warn: function(str, title, buttons, callback){
+    // Backwards-compatibility
+    if (typeof buttons === 'function') {
+      callback = buttons;
+      buttons = ['OK'];
+    }
+
+    this.show('warning', str, title, buttons, callback);
   },
 
-  show: function(type, str, title, callback) {
+  show: function(type, str, title, buttons, callback){
     if (!str || str.trim() == '')
-      throw new Error('Empty or no string passed!');
+      throw('Empty or no string passed!');
 
     if (typeof title == 'function') {
       callback = title;
       title = null;
+      buttons = ['OK'];
     }
 
-    var cmd     = [],
-        os_name = process.platform,
-        title   = title ? title : 'Important';
+    // Backwards-compatibility
+    if (typeof buttons === 'function') {
+      callback = buttons;
+      buttons = ['OK'];
+    }
 
-    var str = (str + '').replace(/([.?*+^$[\]\\(){}<>|`-])/g, "\$1");
+    var cmd = [],
+        os_name = process.platform,
+        title = title ? title : 'Important';
+
+    var str = (str+'').replace(/([.?*+^$[\]\\(){}<>|`-])/g, "\$1");
 
     if (os_name == 'linux') {
 
@@ -45,7 +64,7 @@ var Dialog = module.exports = {
       str = str.replace(/"/g, "'"); // double quotes to single quotes
       cmd.push('osascript') && cmd.push('-e');
       var script = 'tell app \"System Events\" to display dialog ';
-      script += '\"' + str + '\" with title \"' + title + '\" buttons \"OK\"';
+      script += '\"' + str + '\" with title \"' + title + '\" buttons {\"' + buttons.join('", "') + '\"}';
       script += (type == 'warning') ? " with icon 0" : "";
       cmd.push(script);
 
@@ -62,23 +81,22 @@ var Dialog = module.exports = {
 
   },
 
-  run: function(cmd, cb) {
-    var bin    = cmd[0],
-        args   = cmd.splice(1),
-        stdout = '', 
-        stderr = '';
+  run: function(cmd, cb){
+    var bin = cmd[0],
+        args = cmd.splice(1),
+        stdout = '', stderr = '';
 
     var child = spawn(bin, args);
 
-    child.stdout.on('data', function(data) {
+    child.stdout.on('data', function(data){
       stdout += data.toString();
     })
 
-    child.stderr.on('data', function(data) {
+    child.stderr.on('data', function(data){
       stderr += data.toString();
     })
 
-    child.on('exit', function(code) {
+    child.on('exit', function(code){
       cb && cb(code, stdout, stderr);
     })
   }

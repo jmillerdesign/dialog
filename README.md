@@ -38,12 +38,24 @@ dialog.warn('This computer will autoterminate itself in 5 seconds.', function(er
 })
 ```
 
-Both `title` and `callback` are optional. Default title shown is "Important".
+To show buttons:
+
+``` js
+dialog.info(msg, title, buttons, callback);
+
+dialog.info('Do you want to continue?', 'Alert', ['No', 'Yes'], function(err, result){
+	if (!err && (result.trim() === 'button returned:Yes')) {
+		console.log('User clicked Yes')
+	}
+})
+```
+
+`title`, `buttons`, and `callback` are optional. Default title shown is "Important". Default button is "OK".
 
 Credits
 -------
 Written by Tomás Pollak, except for the MsgBox script which was written by
-[StackOverflow user boflynn](http://stackoverflow.com/a/774197).
+[StackOverflow user boflynn](http://stackoverflow.com/a/774197). Improvements made by [J. Miller](https://github.com/jmillerdesign).
 
 Copyright
 ---------
